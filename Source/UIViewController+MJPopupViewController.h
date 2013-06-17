@@ -29,6 +29,8 @@ typedef enum {
 
 - (void)presentPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType;
 - (void)presentModalPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType;
+- (void)presentPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType withBlur:(BOOL)blur;
+- (void)presentModalPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType withBlur:(BOOL)blur;
 - (void)dismissPopupViewControllerWithanimationType:(MJPopupViewAnimation)animationType;
 
 @end
