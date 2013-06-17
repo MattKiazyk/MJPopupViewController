@@ -14,6 +14,7 @@
 #define kPopupModalAnimationDuration 0.35
 #define kMJPopupViewController @"kMJPopupViewController"
 #define kMJPopupBackgroundView @"kMJPopupBackgroundView"
+#define kMJBlurBackgroundView @"kMJBlurBackgroundView"
 #define kMJSourceViewTag 23941
 #define kMJPopupViewTag 23942
 #define kMJOverlayViewTag 23945
@@ -29,7 +30,7 @@
     
     // helps w/ our colors when blurring
     // feel free to adjust jpeg quality (lower = higher perf)
-    NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.75);
     image = [UIImage imageWithData:imageData];
     
     return image;
@@ -143,8 +144,17 @@ static void * const keypath = (void*)&keypath;
     return objc_getAssociatedObject(self, kMJPopupBackgroundView);
 }
 
+- (UIView*)mj_blurBackgroundView {
+    return objc_getAssociatedObject(self, kMJBlurBackgroundView);
+}
+
 - (void)setMj_popupBackgroundView:(MJPopupBackgroundView *)mj_popupBackgroundView {
     objc_setAssociatedObject(self, kMJPopupBackgroundView, mj_popupBackgroundView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    
+}
+
+- (void)setMj_blurBackgroundView:(UIView *)mj_blurBackgroundView {
+    objc_setAssociatedObject(self, kMJBlurBackgroundView, mj_blurBackgroundView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
 }
 
@@ -188,6 +198,13 @@ static void * const keypath = (void*)&keypath;
     UIView *sourceView = [self topView];
     UIView *popupView = [sourceView viewWithTag:kMJPopupViewTag];
     UIView *overlayView = [sourceView viewWithTag:kMJOverlayViewTag];
+    
+    // fade animate blur effect
+    CABasicAnimation *opacityAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    opacityAnimation.fromValue = @(1);
+    opacityAnimation.toValue = @(0);
+    opacityAnimation.duration = kPopupModalAnimationDuration * 0.5f;
+    [self.mj_blurBackgroundView.layer addAnimation:opacityAnimation forKey:nil];
     
     switch (animationType) {
         case MJPopupViewAnimationSlideBottomTop:
@@ -255,20 +272,20 @@ static void * const keypath = (void*)&keypath;
     }
     else
     {
-        UIImage *screenshot = [[UIApplication sharedApplication].keyWindow.rootViewController.view screenshot];
+        UIImage *screenshot = [sourceView screenshot];
         UIImage *blur = [screenshot boxblurImageWithBlur:kMJBlurLevel];
         
-        UIView *blurView = [[UIView alloc] initWithFrame:[UIApplication sharedApplication].keyWindow.rootViewController.view.bounds];
-        blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        blurView.layer.contents = (id) blur.CGImage;
-        [overlayView addSubview:blurView];
-        
+        self.mj_blurBackgroundView = [[MJPopupBackgroundView alloc] initWithFrame:sourceView.bounds];
+        self.mj_blurBackgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        self.mj_blurBackgroundView.layer.contents = (id) blur.CGImage;
+        [overlayView addSubview:self.mj_blurBackgroundView];
+
         // fade animate blur effect 
         CABasicAnimation *opacityAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
         opacityAnimation.fromValue = @(0);
         opacityAnimation.toValue = @(1);
         opacityAnimation.duration = kPopupModalAnimationDuration * 0.5f;
-        [blurView.layer addAnimation:opacityAnimation forKey:nil];
+        [self.mj_blurBackgroundView.layer addAnimation:opacityAnimation forKey:nil];
     }
 
     UIButton *dismissButton = nil;
