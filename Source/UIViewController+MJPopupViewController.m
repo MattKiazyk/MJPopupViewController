@@ -19,6 +19,7 @@
 #define kMJPopupViewTag 23942
 #define kMJOverlayViewTag 23945
 #define kMJBlurLevel 0.05
+#define kMJShadowOpacity 0.0
 
 @implementation UIView (Screenshot)
 
@@ -206,7 +207,7 @@ static void * const keypath = (void*)&keypath;
         opacityAnimation.fromValue = @(1);
         opacityAnimation.toValue = @(0);
         opacityAnimation.duration = kPopupModalAnimationDuration * 0.5f;
-        [self.mj_blurBackgroundView.layer addAnimation:opacityAnimation forKey:nil];
+        //[self.mj_blurBackgroundView.layer addAnimation:opacityAnimation forKey:nil];
     }
     
     switch (animationType) {
@@ -254,7 +255,7 @@ static void * const keypath = (void*)&keypath;
     popupView.layer.masksToBounds = NO;
     popupView.layer.shadowOffset = CGSizeMake(5, 5);
     popupView.layer.shadowRadius = 5;
-    popupView.layer.shadowOpacity = 0.5;
+    popupView.layer.shadowOpacity = kMJShadowOpacity;//0.5;
     popupView.layer.shouldRasterize = YES;
     popupView.layer.rasterizationScale = [[UIScreen mainScreen] scale];
     
