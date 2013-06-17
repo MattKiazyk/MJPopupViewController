@@ -1,6 +1,4 @@
-+ Background Blur (tomaszbrue)
-
-	[self presentPopupViewController:detailViewController animationType:MJPopupViewAnimationFade withBlur:YES];
++ Background Blur (tomaszbrue):	[self presentPopupViewController:detailViewController animationType:MJPopupViewAnimationFade withBlur:YES];
 
 # MJPopupViewController
 
