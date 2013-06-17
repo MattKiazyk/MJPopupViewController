@@ -200,11 +200,14 @@ static void * const keypath = (void*)&keypath;
     UIView *overlayView = [sourceView viewWithTag:kMJOverlayViewTag];
     
     // fade animate blur effect
-    CABasicAnimation *opacityAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
-    opacityAnimation.fromValue = @(1);
-    opacityAnimation.toValue = @(0);
-    opacityAnimation.duration = kPopupModalAnimationDuration * 0.5f;
-    [self.mj_blurBackgroundView.layer addAnimation:opacityAnimation forKey:nil];
+    if (self.mj_blurBackgroundView != nil)
+    {
+        CABasicAnimation *opacityAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        opacityAnimation.fromValue = @(1);
+        opacityAnimation.toValue = @(0);
+        opacityAnimation.duration = kPopupModalAnimationDuration * 0.5f;
+        [self.mj_blurBackgroundView.layer addAnimation:opacityAnimation forKey:nil];
+    }
     
     switch (animationType) {
         case MJPopupViewAnimationSlideBottomTop:
