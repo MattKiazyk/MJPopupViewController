@@ -23,6 +23,7 @@
 		7A469E21159793BE00BA5F2E /* MJSecondDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A469E1F159793BE00BA5F2E /* MJSecondDetailViewController.m */; };
 		7A469E22159793BE00BA5F2E /* MJSecondDetailViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7A469E20159793BE00BA5F2E /* MJSecondDetailViewController.xib */; };
 		7ACBD91A16BC60C4005F5EAB /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7ACBD91916BC60C4005F5EAB /* Default-568h@2x.png */; };
+		ADD0D61A176F10AA0001EFAF /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADD0D619176F10AA0001EFAF /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 		7A469E1F159793BE00BA5F2E /* MJSecondDetailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MJSecondDetailViewController.m; sourceTree = "<group>"; };
 		7A469E20159793BE00BA5F2E /* MJSecondDetailViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MJSecondDetailViewController.xib; sourceTree = "<group>"; };
 		7ACBD91916BC60C4005F5EAB /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		ADD0D619176F10AA0001EFAF /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ADD0D61A176F10AA0001EFAF /* Accelerate.framework in Frameworks */,
 				7A469E1C1597914000BA5F2E /* QuartzCore.framework in Frameworks */,
 				7A1869691597900300526B20 /* UIKit.framework in Frameworks */,
 				7A18696B1597900300526B20 /* Foundation.framework in Frameworks */,
@@ -88,6 +91,7 @@
 		7A1869671597900300526B20 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				ADD0D619176F10AA0001EFAF /* Accelerate.framework */,
 				7A469E1B1597914000BA5F2E /* QuartzCore.framework */,
 				7A1869681597900300526B20 /* UIKit.framework */,
 				7A18696A1597900300526B20 /* Foundation.framework */,

@@ -17,6 +17,104 @@
 #define kMJSourceViewTag 23941
 #define kMJPopupViewTag 23942
 #define kMJOverlayViewTag 23945
+#define kMJBlurLevel 0.05
+
+@implementation UIView (Screenshot)
+
+- (UIImage*)screenshot {
+    UIGraphicsBeginImageContext(self.bounds.size);
+    [self.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    // helps w/ our colors when blurring
+    // feel free to adjust jpeg quality (lower = higher perf)
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
+    image = [UIImage imageWithData:imageData];
+    
+    return image;
+}
+
+@end
+
+#import <Accelerate/Accelerate.h>
+
+@implementation UIImage (Blur)
+
+-(UIImage *)boxblurImageWithBlur:(CGFloat)blur {
+    if (blur < 0.f || blur > 1.f) {
+        blur = 0.5f;
+    }
+    int boxSize = (int)(blur * 40);
+    boxSize = boxSize - (boxSize % 2) + 1;
+    
+    CGImageRef img = self.CGImage;
+    vImage_Buffer inBuffer, outBuffer;
+    vImage_Error error;
+    void *pixelBuffer;
+    
+    //create vImage_Buffer with data from CGImageRef
+    CGDataProviderRef inProvider = CGImageGetDataProvider(img);
+    CFDataRef inBitmapData = CGDataProviderCopyData(inProvider);
+    
+    inBuffer.width = CGImageGetWidth(img);
+    inBuffer.height = CGImageGetHeight(img);
+    inBuffer.rowBytes = CGImageGetBytesPerRow(img);
+    
+    inBuffer.data = (void*)CFDataGetBytePtr(inBitmapData);
+    
+    //create vImage_Buffer for output
+    pixelBuffer = malloc(CGImageGetBytesPerRow(img) * CGImageGetHeight(img));
+    
+    if(pixelBuffer == NULL)
+        NSLog(@"No pixelbuffer");
+    
+    outBuffer.data = pixelBuffer;
+    outBuffer.width = CGImageGetWidth(img);
+    outBuffer.height = CGImageGetHeight(img);
+    outBuffer.rowBytes = CGImageGetBytesPerRow(img);
+    
+    // Create a third buffer for intermediate processing
+    void *pixelBuffer2 = malloc(CGImageGetBytesPerRow(img) * CGImageGetHeight(img));
+    vImage_Buffer outBuffer2;
+    outBuffer2.data = pixelBuffer2;
+    outBuffer2.width = CGImageGetWidth(img);
+    outBuffer2.height = CGImageGetHeight(img);
+    outBuffer2.rowBytes = CGImageGetBytesPerRow(img);
+    
+    //perform convolution
+    error = vImageBoxConvolve_ARGB8888(&inBuffer, &outBuffer2, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
+    error = vImageBoxConvolve_ARGB8888(&outBuffer2, &inBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
+    error = vImageBoxConvolve_ARGB8888(&inBuffer, &outBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
+    
+    if (error) {
+        NSLog(@"error from convolution %ld", error);
+    }
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(outBuffer.data,
+                                             outBuffer.width,
+                                             outBuffer.height,
+                                             8,
+                                             outBuffer.rowBytes,
+                                             colorSpace,
+                                             kCGImageAlphaNoneSkipLast);
+    CGImageRef imageRef = CGBitmapContextCreateImage (ctx);
+    UIImage *returnImage = [UIImage imageWithCGImage:imageRef];
+    
+    //clean up
+    CGContextRelease(ctx);
+    CGColorSpaceRelease(colorSpace);
+    
+    free(pixelBuffer);
+    CFRelease(inBitmapData);
+    
+    CGImageRelease(imageRef);
+    
+    return returnImage;
+}
+
+@end
 
 @interface UIViewController (MJPopupViewControllerPrivate)
 - (UIView*)topView;
@@ -66,6 +164,25 @@ static void * const keypath = (void*)&keypath;
     [self presentPopupView:popupViewController.view animationType:animationType isModal:modal];
 }
 
+// WITH BLUR
+- (void)presentPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType withBlur:(BOOL)blur
+{
+    [self presentPopupViewController:popupViewController animationType:animationType isModal:NO withBlur:blur];
+}
+
+- (void)presentModalPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType withBlur:(BOOL)blur
+{
+    [self presentPopupViewController:popupViewController animationType:animationType isModal:YES withBlur:blur];
+}
+
+- (void)presentPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType isModal:(BOOL)modal withBlur:(BOOL)blur
+{
+    self.mj_popupViewController = popupViewController;
+    [self presentPopupView:popupViewController.view animationType:animationType isModal:modal withBlur:blur];
+}
+
+///
+
 - (void)dismissPopupViewControllerWithanimationType:(MJPopupViewAnimation)animationType
 {
     UIView *sourceView = [self topView];
@@ -97,7 +214,12 @@ static void * const keypath = (void*)&keypath;
 #pragma mark -
 #pragma mark View Handling
 
-- (void)presentPopupView:(UIView*)popupView animationType:(MJPopupViewAnimation)animationType isModal:(BOOL)modal
+- (void)presentPopupView:(UIView*)popupView animationType:(MJPopupViewAnimation)animationType isModal:(BOOL)modal 
+{
+    [self presentPopupView:popupView animationType:animationType isModal:modal withBlur:NO];
+}
+
+- (void)presentPopupView:(UIView*)popupView animationType:(MJPopupViewAnimation)animationType isModal:(BOOL)modal withBlur:(BOOL)blur
 {
     UIView *sourceView = [self topView];
     sourceView.tag = kMJSourceViewTag;
@@ -123,11 +245,31 @@ static void * const keypath = (void*)&keypath;
     overlayView.backgroundColor = [UIColor clearColor];
     
     // BackgroundView
-    self.mj_popupBackgroundView = [[MJPopupBackgroundView alloc] initWithFrame:sourceView.bounds];
-    self.mj_popupBackgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.mj_popupBackgroundView.backgroundColor = [UIColor clearColor];
-    self.mj_popupBackgroundView.alpha = 0.0f;
-    [overlayView addSubview:self.mj_popupBackgroundView];
+    if (blur == NO)
+    {
+        self.mj_popupBackgroundView = [[MJPopupBackgroundView alloc] initWithFrame:sourceView.bounds];
+        self.mj_popupBackgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        self.mj_popupBackgroundView.backgroundColor = [UIColor clearColor];
+        self.mj_popupBackgroundView.alpha = 0.0f;
+        [overlayView addSubview:self.mj_popupBackgroundView];
+    }
+    else
+    {
+        UIImage *screenshot = [[UIApplication sharedApplication].keyWindow.rootViewController.view screenshot];
+        UIImage *blur = [screenshot boxblurImageWithBlur:kMJBlurLevel];
+        
+        UIView *blurView = [[UIView alloc] initWithFrame:[UIApplication sharedApplication].keyWindow.rootViewController.view.bounds];
+        blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        blurView.layer.contents = (id) blur.CGImage;
+        [overlayView addSubview:blurView];
+        
+        // fade animate blur effect 
+        CABasicAnimation *opacityAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        opacityAnimation.fromValue = @(0);
+        opacityAnimation.toValue = @(1);
+        opacityAnimation.duration = kPopupModalAnimationDuration * 0.5f;
+        [blurView.layer addAnimation:opacityAnimation forKey:nil];
+    }
 
     UIButton *dismissButton = nil;
     if (!modal) {
