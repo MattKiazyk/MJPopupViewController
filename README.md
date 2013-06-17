@@ -1,3 +1,5 @@
++ Background Blur (tomaszbrue):	[self presentPopupViewController:detailViewController animationType:MJPopupViewAnimationFade withBlur:YES];
+
 # MJPopupViewController
 
 A UIViewController Category to display a ViewController as a popup with different transition effects.
