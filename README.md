@@ -1,3 +1,7 @@
++ Background Blur (tomaszbrue)
+
+	[self presentPopupViewController:detailViewController animationType:MJPopupViewAnimationFade withBlur:YES];
+
 # MJPopupViewController
 
 A UIViewController Category to display a ViewController as a popup with different transition effects.
@@ -20,10 +24,6 @@ First you have to import the category
 then simply use `presentPopupViewController:animationType`, f.e.:
 	
 	[self presentPopupViewController:detailViewController animationType:MJPopupViewAnimationFade];
-	
-and if you like to see a blurred background behind your popup view
-
-	[self presentPopupViewController:detailViewController animationType:MJPopupViewAnimationFade withBlur:YES];
 	
 to dismiss the popup, use `dismissPopupViewControllerWithanimationType`
 	
